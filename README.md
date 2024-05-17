@@ -1,0 +1,2 @@
+# InventarioPro
+Aplicacion de inventarios
