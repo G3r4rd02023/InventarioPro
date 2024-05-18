@@ -1,3 +1,5 @@
+using InventarioPro.Frontend.Services;
+
 namespace InventarioPro.Frontend
 {
     public class Program
@@ -7,9 +9,18 @@ namespace InventarioPro.Frontend
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+            builder.Services.Configure<Firebase>(builder.Configuration.GetSection("Credentials"));
             builder.Services.AddControllersWithViews();
-
+            builder.Services.AddHttpClient();
+            builder.Services.AddScoped<IServicioLista, ServicioLista>();
+            builder.Services.AddScoped<IServicioImagen, ServicioImagen>();
+            builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7013/") });
             var app = builder.Build();
+
+            app.UseCors(x => x.AllowAnyMethod()
+           .AllowAnyHeader()
+           .SetIsOriginAllowed(origin => true)
+           .AllowCredentials());
 
             // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
