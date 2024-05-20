@@ -44,6 +44,9 @@ namespace InventarioPro.Frontend.Controllers
             return View(producto);
         }
 
+       
+
+
         [HttpPost]
         public async Task<IActionResult> Create(Producto producto, IFormFile Imagen)
         {
@@ -68,6 +71,68 @@ namespace InventarioPro.Frontend.Controllers
             }
             producto.Categorias = await _servicioLista.GetListaCategorias();
             return View(producto);
+        }
+
+        public async Task<IActionResult> Edit(int id)
+        {
+            // Obtener el producto existente por su ID
+            var producto = await _httpClient.GetFromJsonAsync<Producto>($"/api/Productos/{id}");
+
+            // Obtener la lista de categorías
+            producto.Categorias = await _servicioLista.GetListaCategorias();
+
+            // Retornar la vista con el producto
+            return View(producto);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(int id, Producto producto, IFormFile Imagen)
+        {
+            if (ModelState.IsValid)
+            {
+                // Si hay una nueva imagen, subirla y actualizar la URL de la foto en el producto
+                if (Imagen != null)
+                {
+                    Stream image = Imagen.OpenReadStream();
+                    string urlimagen = await _servicioImagen.SubirImagen(image, Imagen.FileName);
+                    producto.Foto = urlimagen;
+                }
+
+                // Serializar el producto a JSON
+                var json = JsonConvert.SerializeObject(producto);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                // Enviar la petición de actualización al servidor
+                var response = await _httpClient.PutAsync($"/api/Productos/{id}", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return RedirectToAction("Index");
+                }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, "Error al editar el producto.");
+                }
+            }
+
+            // Si hay un error en el modelo o la respuesta falla, obtener nuevamente las categorías
+            producto.Categorias = await _servicioLista.GetListaCategorias();
+            return View(producto);
+        }
+        
+        public async Task<IActionResult> Delete(int id)
+        {
+            var response = await _httpClient.DeleteAsync($"/api/Productos/{id}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                return RedirectToAction("Index");
+            }
+            else
+            {
+                TempData["Error"] = "Error al eliminar el producto.";
+                return RedirectToAction("Index");
+            }
         }
     }
 }

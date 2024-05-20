@@ -43,9 +43,14 @@ namespace InventarioPro.Backend.Controllers
             return Ok(producto);
         }
 
-        [HttpPut]
-        public async Task<IActionResult> PutAsync(Producto producto)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutAsync(int id, [FromBody] Producto producto)
         {
+            if (id != producto.Id)
+            {
+                return BadRequest();
+            }
+
             _context.Update(producto);
             await _context.SaveChangesAsync();
             return NoContent();
