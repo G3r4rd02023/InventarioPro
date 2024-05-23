@@ -1,0 +1,55 @@
+﻿@model Producto
+
+@{
+    ViewData["Title"] = "Detalles del Producto";
+    Layout = null;
+}
+
+<h2>Detalles del Producto</h2>
+
+<div>
+    <h4>Producto</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            Nombre
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Nombre)
+        </dd>
+        <dt class="col-sm-2">
+            Descripción
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Descripcion)
+        </dd>
+        <dt class="col-sm-2">
+            Precio
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Precio)
+        </dd>
+        <dt class="col-sm-2">
+            Categoría
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Categoria.Nombre)
+        </dd>
+        <dt class="col-sm-2">
+            Stock
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Cantidad)
+        </dd>
+        <dt class="col-sm-2">
+            Foto
+        </dt>
+        <dd class="col-sm-10">
+            <img src="@Model.Foto" alt="Imagen del producto" class="img-fluid" />
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="RegistrarTransaccion" asp-route-id="@Model.Id" class="btn btn-success">Modificar Stock</a>
+    <a asp-action="Index" class="btn btn-primary">Volver a la lista</a>
+</div>

@@ -1,7 +1,10 @@
-﻿using InventarioPro.Frontend.Models;
+﻿using Firebase.Storage;
+using InventarioPro.Frontend.Models;
 using InventarioPro.Frontend.Services;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using System.Net.Http;
+using System.Reflection;
 using System.Text;
 
 namespace InventarioPro.Frontend.Controllers
@@ -134,5 +137,100 @@ namespace InventarioPro.Frontend.Controllers
                 return RedirectToAction("Index");
             }
         }
+
+        public async Task<IActionResult> Detalles(int id)
+        {
+            
+            var response = await _httpClient.GetAsync($"/api/Productos/{id}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return NotFound();
+            }
+
+            var producto = await response.Content.ReadFromJsonAsync<Producto>();
+            return View(producto);
+        }
+
+        public async Task<IActionResult> RegistrarTransaccion(int id)
+        {           
+            var response = await _httpClient.GetAsync($"/api/Productos/{id}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return NotFound();
+            }
+
+            var producto = await response.Content.ReadFromJsonAsync<Producto>();
+
+           
+
+            var operacion = new Operacion
+            {
+                ProductoId = producto.Id,
+                Fecha = DateTime.UtcNow,
+                Producto = producto,                
+            };
+
+            return View(operacion);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RegistrarTransaccion(int id, Operacion operacion)
+        {
+            if (ModelState.IsValid)
+            {
+                var response = await _httpClient.GetAsync($"/api/Productos/{id}");
+                if (!response.IsSuccessStatusCode)
+                {
+                    return NotFound();
+                }
+
+                var producto = await response.Content.ReadFromJsonAsync<Producto>();
+
+                if (operacion.Tipo == "Entrada")
+                {
+                    producto.Cantidad += operacion.Cantidad;
+                }
+                else if (operacion.Tipo == "Salida")
+                {
+                    if (producto.Cantidad < operacion.Cantidad)
+                    {
+                        ModelState.AddModelError(string.Empty, "Stock insuficiente.");
+                        return View(operacion);
+                    }
+                    producto.Cantidad -= operacion.Cantidad;
+                }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, "Tipo de transacción inválido.");
+                    return View(operacion);
+                }
+
+                // Asegúrate de no incluir la categoría en la operación para evitar conflictos
+                var jsonOperacion = JsonConvert.SerializeObject(new
+                {
+                    operacion.Cantidad,
+                    operacion.Fecha,
+                    operacion.ProductoId,
+                    operacion.Tipo
+                });
+                var contentOperacion = new StringContent(jsonOperacion, Encoding.UTF8, "application/json");
+
+                var postResponse = await _httpClient.PostAsync($"/api/Productos/{id}/operacion", contentOperacion);
+                if (postResponse.IsSuccessStatusCode)
+                {
+                    return RedirectToAction("Index");
+                }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, "Error al registrar la transacción.");
+                }
+            }
+
+            return View(operacion);
+        }
+
+
     }
 }

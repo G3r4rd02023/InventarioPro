@@ -10,6 +10,7 @@ namespace InventarioPro.Backend.Data
         }
 
         public DbSet<Categoria> Categorias { get; set; }
+        public DbSet<Operacion> Operaciones { get; set; }
         public DbSet<Producto> Productos { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
